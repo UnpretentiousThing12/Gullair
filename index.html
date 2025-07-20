@@ -2,94 +2,46 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Gullsim 3D World</title>
+  <title>Gullism Groundspace</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      overflow: hidden;
-      background: black;
-    }
-    canvas {
-      display: block;
-    }
-    #info {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      color: white;
-      font-family: sans-serif;
-      z-index: 1;
-    }
+    body { margin: 0; overflow: hidden; background: #000; }
+    canvas { display: block; }
   </style>
 </head>
 <body>
-  <div id="info">Click to lock mouse. Use W/A/S/D + Mouse</div>
   <script src="https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/three@0.161.0/examples/js/controls/PointerLockControls.js"></script>
   <script>
+    // Basic scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000000);
+    scene.background = new THREE.Color(0x000000); // Black background
 
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 2000);
-    camera.position.set(0, 5, 0);
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
+    camera.position.set(0, 200, 500); // High up and back
+    camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    const light = new THREE.DirectionalLight(0xffffff, 1);
-    light.position.set(10, 20, 10);
+    // Huge ground grid
+    const gridHelper = new THREE.GridHelper(1000, 100, 0x00ff00, 0x007700);
+    scene.add(gridHelper);
+
+    // Ambient light
+    const light = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(light);
-    scene.add(new THREE.AmbientLight(0x666666));
 
-    // Ground plane
-    const groundGeo = new THREE.PlaneGeometry(2000, 2000);
-    const groundMat = new THREE.MeshLambertMaterial({ color: 0x003300 });
-    const ground = new THREE.Mesh(groundGeo, groundMat);
-    ground.rotation.x = -Math.PI / 2;
-    scene.add(ground);
-
-    // Controls
-    const controls = new THREE.PointerLockControls(camera, document.body);
-    document.body.addEventListener('click', () => controls.lock());
-
-    scene.add(controls.getObject());
-
-    // Movement
-    const keys = {};
-    document.addEventListener('keydown', e => keys[e.code] = true);
-    document.addEventListener('keyup', e => keys[e.code] = false);
-
-    let velocity = new THREE.Vector3();
-    const speed = 400.0;
-
+    // Render loop
     function animate() {
-      const delta = Math.min(0.05, renderer.info.render.frame / 1000);
-
-      velocity.set(0, 0, 0);
-      const dir = new THREE.Vector3();
-
-      if (keys['KeyW']) velocity.z -= 1;
-      if (keys['KeyS']) velocity.z += 1;
-      if (keys['KeyA']) velocity.x -= 1;
-      if (keys['KeyD']) velocity.x += 1;
-
-      dir.copy(velocity).normalize();
-      const isShift = keys['ShiftLeft'] || keys['ShiftRight'];
-      const moveSpeed = isShift ? speed * 2 : speed;
-
-      controls.moveRight(dir.x * moveSpeed * delta);
-      controls.moveForward(dir.z * moveSpeed * delta);
-
-      renderer.render(scene, camera);
       requestAnimationFrame(animate);
+      renderer.render(scene, camera);
     }
-
     animate();
 
+    // Resize support
     window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth/window.innerHeight;
+      camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
