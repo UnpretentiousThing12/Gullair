@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Gull Simulator - 3rd Person View</title>
+<style>
+  body { margin: 0; overflow: hidden; }
+  canvas { display: block; }
+</style>
+</head>
+<body>
+<script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+<script>
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xaee1f9);
+
+  const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+  const renderer = new THREE.WebGLRenderer({antialias:true});
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  document.body.appendChild(renderer.domElement);
+
+  const seaGeo = new THREE.PlaneGeometry(500, 500);
+  const seaMat = new THREE.MeshPhongMaterial({color: 0x1e90ff});
+  const sea = new THREE.Mesh(seaGeo, seaMat);
+  sea.rotation.x = -Math.PI/2;
+  sea.position.y = 0;
+  scene.add(sea);
+
+  const cliffGeo = new THREE.BoxGeometry(20, 30, 10);
+  const cliffMat = new THREE.MeshPhongMaterial({color: 0x8B4513});
+  const cliffPositions = [
+    {x: 50, y:15, z:-40}, {x:-60, y:15, z:60},
+    {x: 100, y:15, z:80}, {x:-120, y:15, z:-80},
+    {x: 0, y:15, z: 120}, {x: -100, y:15, z: -120}
+  ];
+  cliffPositions.forEach(pos => {
+    const cliff = new THREE.Mesh(cliffGeo, cliffMat);
+    cliff.position.set(pos.x, pos.y, pos.z);
+    scene.add(cliff);
+  });
+
+  const gullGeo = new THREE.BoxGeometry(3, 2, 4);
+  const gullMat = new THREE.MeshBasicMaterial({color: 0x00ff00});
+  const gull = new THREE.Mesh(gullGeo, gullMat);
+  gull.position.set(0, 3, 0);
+  scene.add(gull);
+
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+  scene.add(ambientLight);
+  const dirLight = new THREE.DirectionalLight(0xffffff, 0.8);
+  dirLight.position.set(30, 50, 10);
+  scene.add(dirLight);
+
+  const move = {forward:false, backward:false, left:false, right:false};
+  const speed = 0.7;
+  window.addEventListener('keydown', (e) => {
+    switch(e.code) {
+      case 'KeyW': case 'ArrowUp': move.forward = true; break;
+      case 'KeyS': case 'ArrowDown': move.backward = true; break;
+      case 'KeyA': case 'ArrowLeft': move.left = true; break;
+      case 'KeyD': case 'ArrowRight': move.right = true; break;
+    }
+  });
+  window.addEventListener('keyup', (e) => {
+    switch(e.code) {
+      case 'KeyW': case 'ArrowUp': move.forward = false; break;
+      case 'KeyS': case 'ArrowDown': move.backward = false; break;
+      case 'KeyA': case 'ArrowLeft': move.left = false; break;
+      case 'KeyD': case 'ArrowRight': move.right = false; break;
+    }
+  });
+
+  function animate() {
+    requestAnimationFrame(animate);
+    if(move.forward) gull.position.z -= speed;
+    if(move.backward) gull.position.z += speed;
+    if(move.left) gull.position.x -= speed;
+    if(move.right) gull.position.x += speed;
+
+    const camOffset = new THREE.Vector3(0, 8, 15);
+    const desiredPos = gull.position.clone().add(camOffset);
+    camera.position.lerp(desiredPos, 0.1);
+    camera.lookAt(gull.position);
+
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  window.addEventListener('resize', () => {
+    camera.aspect = window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  });
+</script>
+</body>
+</html>
