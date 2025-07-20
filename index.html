@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Gullism Groundspace</title>
+  <title>GullSim Base Debug</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
     body { margin: 0; overflow: hidden; background: #000; }
@@ -12,34 +12,67 @@
 <body>
   <script src="https://cdn.jsdelivr.net/npm/three@0.161.0/build/three.min.js"></script>
   <script>
-    // Basic scene setup
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x000000); // Black background
+    scene.background = new THREE.Color(0x87ceeb); // sky blue
 
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 5000);
-    camera.position.set(0, 200, 500); // High up and back
+    camera.position.set(0, 200, 500);
     camera.lookAt(0, 0, 0);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     document.body.appendChild(renderer.domElement);
 
-    // Huge ground grid
-    const gridHelper = new THREE.GridHelper(1000, 100, 0x00ff00, 0x007700);
+    // Grid and origin marker
+    const gridHelper = new THREE.GridHelper(1000, 50, 0x444444, 0x888888);
     scene.add(gridHelper);
 
-    // Ambient light
-    const light = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(light);
+    const originCube = new THREE.Mesh(
+      new THREE.BoxGeometry(10, 10, 10),
+      new THREE.MeshBasicMaterial({ color: 0xff0000 })
+    );
+    scene.add(originCube);
 
-    // Render loop
+    // Huge terrain block
+    const terrain = new THREE.Mesh(
+      new THREE.BoxGeometry(1000, 40, 1000),
+      new THREE.MeshLambertMaterial({ color: 0x228B22 })
+    );
+    terrain.position.y = -20;
+    scene.add(terrain);
+
+    // Lighting
+    const ambient = new THREE.AmbientLight(0xffffff, 0.7);
+    const directional = new THREE.DirectionalLight(0xffffff, 0.5);
+    directional.position.set(100, 200, 100);
+    scene.add(ambient, directional);
+
+    // Load gull image
+    const loader = new THREE.TextureLoader();
+    loader.load('gull.png',
+      texture => {
+        const gullGeo = new THREE.PlaneGeometry(100, 75); // Adjust size if needed
+        const gullMat = new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true,
+          side: THREE.DoubleSide
+        });
+        const gull = new THREE.Mesh(gullGeo, gullMat);
+        gull.position.set(0, 60, 0);
+        scene.add(gull);
+      },
+      undefined,
+      err => {
+        console.error('Failed to load gull.png:', err);
+      }
+    );
+
     function animate() {
       requestAnimationFrame(animate);
       renderer.render(scene, camera);
     }
     animate();
 
-    // Resize support
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
