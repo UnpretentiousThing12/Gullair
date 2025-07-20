@@ -45,7 +45,7 @@
     directionalLight.position.set(10, 20, 10);
     scene.add(directionalLight);
 
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
 
     // Terrain (cliffs placeholder)
@@ -55,20 +55,33 @@
     terrain.position.y = -2.5; // so top is at y=0
     scene.add(terrain);
 
+    // Water plane below terrain
+    const waterGeometry = new THREE.PlaneGeometry(100, 100);
+    const waterMaterial = new THREE.MeshPhongMaterial({ color: 0x1e90ff, transparent: true, opacity: 0.7 });
+    const water = new THREE.Mesh(waterGeometry, waterMaterial);
+    water.rotation.x = -Math.PI / 2;
+    water.position.y = -3;
+    scene.add(water);
+
+    // Axes helper (optional - remove if you want)
+    // const axesHelper = new THREE.AxesHelper(10);
+    // scene.add(axesHelper);
+
     // Load seagull texture and add as plane
     const loader = new THREE.TextureLoader();
     const gullTextureURL = 'https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Herring_Gull_Kittiwake_Trieste_2.jpg/320px-Herring_Gull_Kittiwake_Trieste_2.jpg';
 
     loader.load(gullTextureURL, function(texture) {
-      const gullWidth = 3;
+      const gullWidth = 6; // make it bigger
       const aspectRatio = texture.image.height / texture.image.width;
       const gullHeight = gullWidth * aspectRatio;
 
       const gullGeometry = new THREE.PlaneGeometry(gullWidth, gullHeight);
-      const gullMaterial = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+      const gullMaterial = new THREE.MeshBasicMaterial({ map: texture, transparent: true, side: THREE.DoubleSide });
       const gull = new THREE.Mesh(gullGeometry, gullMaterial);
 
-      gull.position.set(0, gullHeight / 2 + 1, 0); // elevate above terrain
+      gull.position.set(0, gullHeight / 2 + 3, 0); // elevate above terrain + water
+      gull.rotation.y = Math.PI; // rotate to face camera (camera looks towards -z)
       scene.add(gull);
 
       animate();
